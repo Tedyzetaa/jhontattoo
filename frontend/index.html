@@ -152,12 +152,9 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="tattooImage">Imagem de referência</label>
-                        <div class="file-upload">
-                            <input type="file" id="tattooImage" name="tattooImage" accept="image/*" required>
-                            <div class="file-upload-label">Escolher arquivo</div>
-                        </div>
-                        <div class="file-name" id="fileName">Nenhum arquivo selecionado</div>
+                        <p class="text-secondary" style="font-size: 0.9rem; margin-top: 5px;">
+                            Não se esqueça de mandar o modelo de tatuagem que gostaria de ser feito no WhatsApp!
+                        </p>
                     </div>
                     <div class="form-group">
                         <label for="additionalInfo">Informações adicionais (opcional)</label>
@@ -420,8 +417,6 @@
         const modalClose = document.getElementById('modalClose');
         const bookingClose = document.getElementById('bookingClose');
         const bookingForm = document.getElementById('bookingForm');
-        const tattooImage = document.getElementById('tattooImage');
-        const fileName = document.getElementById('fileName');
         const submitBooking = document.getElementById('submitBooking');
         const submitSpinner = document.getElementById('submitSpinner');
         const submitText = document.getElementById('submitText');
@@ -559,12 +554,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        if (tattooImage) {
-            tattooImage.addEventListener('change', function() {
-                fileName.textContent = this.files && this.files[0] ? this.files[0].name : 'Nenhum arquivo selecionado';
-            });
-        }
-
         if (bookingForm) {
             bookingForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -575,8 +564,6 @@
                     return;
                 }
                 const formData = new FormData(bookingForm);
-                formData.append('userId', user.uid);
-                formData.append('userEmail', user.email);
                 submitSpinner.style.display = 'inline-block';
                 submitText.textContent = 'Enviando...';
                 submitBooking.disabled = true;
@@ -586,15 +573,12 @@
                 const fullName = document.getElementById('fullName').value;
                 const bodyPart = document.getElementById('bodyPart').value;
                 const additionalInfo = document.getElementById('additionalInfo').value;
-                const hasImage = tattooImage.files.length > 0;
-
                 const tattooArtistWhatsapp = "5547999713264";
                 
                 let message = `Olá! Gostaria de agendar uma tatuagem.\n\n`;
                 message += `*Nome:* ${fullName}\n`;
                 message += `*Parte do Corpo:* ${bodyPart}\n`;
                 if (additionalInfo) message += `*Detalhes:* ${additionalInfo}\n`;
-                if (hasImage) message += `\n_(Anexarei a imagem de referência na conversa.)_`;
 
                 const whatsappUrl = `https://wa.me/${tattooArtistWhatsapp}?text=${encodeURIComponent(message)}`;
 
