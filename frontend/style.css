@@ -968,3 +968,52 @@ footer {
     font-size: 12px;
     z-index: 10000;
 }
+
+/* Error and Loading States */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    width: 100%;
+}
+
+.loading.error {
+    color: var(--accent-color);
+    border: 2px dashed var(--accent-color);
+    border-radius: 2px;
+}
+
+.gallery-item.placeholder {
+    background-color: var(--light-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed var(--border-color);
+    min-height: 300px;
+}
+
+.placeholder-content {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.placeholder-text {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.gallery-item.error {
+    border-color: var(--accent-color);
+}
+
+.gallery-item.error .placeholder-content {
+    color: var(--accent-color);
+}

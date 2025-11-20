@@ -1,27 +1,36 @@
-// app.js
+// app.js - Jhow Tattoo Studio
+// Versão otimizada para deploy no Vercel
 
-// Arrays de imagens e vídeos (caminhos relativos)
+// Detect environment
+const isVercel = window.location.hostname.includes('vercel.app') || 
+                 window.location.hostname.includes('now.sh');
+
+console.log('Environment:', isVercel ? 'Vercel' : 'Local');
+console.log('Current URL:', window.location.href);
+
+// No Vercel, os caminhos são relativos à raiz do deploy
+// Use caminhos absolutos começando com / para garantir que funcionem no Vercel
 const imageFiles = [
-    'img/img1.jpg',
-    'img/img2.jpg',
-    'img/img3.jpg',
-    'img/img4.jpg',
-    'img/img5.jpg',
-    'img/img6.jpg',
-    'img/img7.jpg',
-    'img/img8.jpg',
-    'img/img9.jpg'
+    '/img/img1.jpg',
+    '/img/img2.jpg',
+    '/img/img3.jpg',
+    '/img/img4.jpg',
+    '/img/img5.jpg',
+    '/img/img6.jpg',
+    '/img/img7.jpg',
+    '/img/img8.jpg',
+    '/img/img9.jpg'
 ];
 
 const videoFiles = [
-    'video/video1.mp4',
-    'video/video2.mp4',
-    'video/video3.mp4',
-    'video/video4.mp4',
-    'video/video5.mp4',
-    'video/video6.mp4',
-    'video/video7.mp4',
-    'video/video8.mp4'
+    '/video/video1.mp4',
+    '/video/video2.mp4',
+    '/video/video3.mp4',
+    '/video/video4.mp4',
+    '/video/video5.mp4',
+    '/video/video6.mp4',
+    '/video/video7.mp4',
+    '/video/video8.mp4'
 ];
 
 // DOM Elements
@@ -41,23 +50,42 @@ const modalArtist = document.getElementById('modalArtist');
 const modalCategory = document.getElementById('modalCategory');
 const modalDescription = document.getElementById('modalDescription');
 const modalClose = document.getElementById('modalClose');
+const bookingClose = document.getElementById('bookingClose');
+const bookingForm = document.getElementById('bookingForm');
+const tattooImage = document.getElementById('tattooImage');
+const fileName = document.getElementById('fileName');
+const submitBooking = document.getElementById('submitBooking');
+const submitSpinner = document.getElementById('submitSpinner');
+const submitText = document.getElementById('submitText');
+const bookingError = document.getElementById('bookingError');
+const bookingSuccess = document.getElementById('bookingSuccess');
 
-// Backend URL from config
+// Use BACKEND_URL do window.APP_CONFIG se disponível
 const BACKEND_URL = window.APP_CONFIG ? window.APP_CONFIG.BACKEND_URL : 'https://jhontattoo-backend.onrender.com';
 
 // Current visible item index for each gallery
 let currentImageIndex = 0;
 let currentVideoIndex = 0;
 
-// Function to check if file exists
-async function checkFileExists(url) {
-    try {
-        const response = await fetch(url, { method: 'HEAD' });
-        return response.ok;
-    } catch (error) {
-        console.error(`Error checking file ${url}:`, error);
-        return false;
-    }
+// Function to check if file exists with better error handling
+function checkFileExists(url) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        // Add cache busting to avoid cached 404 responses
+        img.src = url + '?t=' + Date.now();
+    });
+}
+
+// Function to check if video exists
+function checkVideoExists(url) {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.onloadeddata = () => resolve(true);
+        video.onerror = () => resolve(false);
+        video.src = url + '?t=' + Date.now();
+    });
 }
 
 // Function to create placeholder for missing files
@@ -67,7 +95,7 @@ function createPlaceholder(type, index) {
     placeholder.innerHTML = `
         <div class="placeholder-content">
             <div class="placeholder-icon">${type === 'image' ? '📷' : '🎥'}</div>
-            <div class="placeholder-text">${type === 'image' ? 'Imagem' : 'Vídeo'} ${index + 1}<br><small>Não encontrado</small></div>
+            <div class="placeholder-text">${type === 'image' ? 'Imagem' : 'Vídeo'} ${index + 1}<br><small>Carregando...</small></div>
         </div>
     `;
     return placeholder;
@@ -75,106 +103,161 @@ function createPlaceholder(type, index) {
 
 // Function to load image gallery
 async function loadImageGallery() {
-    if (!imageGallery) return;
+    if (!imageGallery) {
+        console.error('imageGallery element not found');
+        return;
+    }
 
+    console.log('Starting to load image gallery...');
     imageGallery.innerHTML = '<div class="loading">Carregando imagens...</div>';
 
-    for (let i = 0; i < imageFiles.length; i++) {
-        const src = imageFiles[i];
-        const fileExists = await checkFileExists(src);
-        
+    const loadPromises = imageFiles.map(async (src, i) => {
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
         galleryItem.setAttribute('data-index', i);
 
-        if (fileExists) {
-            const img = document.createElement('img');
-            img.src = src;
-            img.alt = `Tattoo image ${i + 1}`;
-            img.loading = 'lazy';
+        try {
+            console.log(`Checking image: ${src}`);
+            const fileExists = await checkFileExists(src);
             
-            // Add error handling for individual images
-            img.onerror = function() {
-                console.error(`Erro ao carregar imagem: ${src}`);
-                galleryItem.innerHTML = `
-                    <div class="placeholder-content">
-                        <div class="placeholder-icon">❌</div>
-                        <div class="placeholder-text">Erro ao carregar<br><small>${src}</small></div>
-                    </div>
-                `;
-                galleryItem.classList.add('error');
-            };
+            if (fileExists) {
+                console.log(`Image exists, loading: ${src}`);
+                const img = new Image();
+                img.src = src;
+                img.alt = `Tattoo image ${i + 1}`;
+                img.loading = 'lazy';
+                
+                img.onload = () => {
+                    console.log(`Image loaded successfully: ${src}`);
+                    galleryItem.classList.add('loaded');
+                };
+                
+                img.onerror = () => {
+                    console.error(`Failed to load image: ${src}`);
+                    galleryItem.innerHTML = `
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">❌</div>
+                            <div class="placeholder-text">Erro ao carregar</div>
+                        </div>
+                    `;
+                    galleryItem.classList.add('error');
+                };
 
-            galleryItem.appendChild(img);
-            galleryItem.addEventListener('click', () => openMediaModal('image', src, i));
-        } else {
+                galleryItem.appendChild(img);
+                galleryItem.addEventListener('click', () => openMediaModal('image', src, i));
+            } else {
+                console.warn(`Image not found: ${src}`);
+                galleryItem.appendChild(createPlaceholder('image', i));
+                galleryItem.classList.add('not-found');
+            }
+        } catch (error) {
+            console.error(`Error loading image ${src}:`, error);
             galleryItem.appendChild(createPlaceholder('image', i));
-            console.warn(`Imagem não encontrada: ${src}`);
+            galleryItem.classList.add('error');
         }
 
-        imageGallery.appendChild(galleryItem);
+        return galleryItem;
+    });
+
+    try {
+        const galleryItems = await Promise.all(loadPromises);
+        imageGallery.innerHTML = ''; // Clear loading message
+        galleryItems.forEach(item => imageGallery.appendChild(item));
+        
+        // Create indicator dots
+        createIndicator(imageIndicator, imageFiles.length, 0);
+        console.log('Image gallery loaded successfully');
+    } catch (error) {
+        console.error('Error loading image gallery:', error);
+        imageGallery.innerHTML = '<div class="loading error">Erro ao carregar imagens</div>';
     }
-
-    // Remove loading message
-    const loadingMsg = imageGallery.querySelector('.loading');
-    if (loadingMsg) loadingMsg.remove();
-
-    // Create indicator dots
-    createIndicator(imageIndicator, imageFiles.length, 0);
 }
 
 // Function to load video gallery
 async function loadVideoGallery() {
-    if (!videoGallery) return;
+    if (!videoGallery) {
+        console.error('videoGallery element not found');
+        return;
+    }
 
+    console.log('Starting to load video gallery...');
     videoGallery.innerHTML = '<div class="loading">Carregando vídeos...</div>';
 
-    for (let i = 0; i < videoFiles.length; i++) {
-        const src = videoFiles[i];
-        const fileExists = await checkFileExists(src);
-        
+    const loadPromises = videoFiles.map(async (src, i) => {
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
         galleryItem.setAttribute('data-index', i);
 
-        if (fileExists) {
+        try {
+            console.log(`Checking video: ${src}`);
+            
+            // For videos, we'll create them and let the browser handle loading
             const video = document.createElement('video');
             video.src = src;
             video.alt = `Tattoo video ${i + 1}`;
             video.preload = 'metadata';
+            video.muted = true; // Mute for autoplay prevention
             
-            // Add error handling for individual videos
-            video.onerror = function() {
-                console.error(`Erro ao carregar vídeo: ${src}`);
+            const playIcon = document.createElement('div');
+            playIcon.className = 'play-icon';
+
+            video.onloadeddata = () => {
+                console.log(`Video loaded successfully: ${src}`);
+                galleryItem.classList.add('loaded');
+                
+                // Create thumbnail from video
+                video.currentTime = 1; // Get frame at 1 second
+            };
+            
+            video.onerror = () => {
+                console.error(`Failed to load video: ${src}`);
                 galleryItem.innerHTML = `
                     <div class="placeholder-content">
                         <div class="placeholder-icon">❌</div>
-                        <div class="placeholder-text">Erro ao carregar<br><small>${src}</small></div>
+                        <div class="placeholder-text">Erro ao carregar</div>
                     </div>
                 `;
                 galleryItem.classList.add('error');
             };
 
-            const playIcon = document.createElement('div');
-            playIcon.className = 'play-icon';
+            // Try to create a thumbnail
+            video.addEventListener('loadeddata', function() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    // You could use this canvas as thumbnail if needed
+                } catch (e) {
+                    console.log('Could not create video thumbnail:', e);
+                }
+            });
 
             galleryItem.appendChild(video);
             galleryItem.appendChild(playIcon);
             galleryItem.addEventListener('click', () => openMediaModal('video', src, i));
-        } else {
+        } catch (error) {
+            console.error(`Error loading video ${src}:`, error);
             galleryItem.appendChild(createPlaceholder('video', i));
-            console.warn(`Vídeo não encontrado: ${src}`);
+            galleryItem.classList.add('error');
         }
 
-        videoGallery.appendChild(galleryItem);
+        return galleryItem;
+    });
+
+    try {
+        const galleryItems = await Promise.all(loadPromises);
+        videoGallery.innerHTML = ''; // Clear loading message
+        galleryItems.forEach(item => videoGallery.appendChild(item));
+        
+        // Create indicator dots
+        createIndicator(videoIndicator, videoFiles.length, 0);
+        console.log('Video gallery loaded successfully');
+    } catch (error) {
+        console.error('Error loading video gallery:', error);
+        videoGallery.innerHTML = '<div class="loading error">Erro ao carregar vídeos</div>';
     }
-
-    // Remove loading message
-    const loadingMsg = videoGallery.querySelector('.loading');
-    if (loadingMsg) loadingMsg.remove();
-
-    // Create indicator dots
-    createIndicator(videoIndicator, videoFiles.length, 0);
 }
 
 // Function to create indicator dots
@@ -190,12 +273,38 @@ function createIndicator(container, count, activeIndex) {
             dot.classList.add('active');
         }
         dot.addEventListener('click', () => {
-            // This would scroll to the specific item
-            // For simplicity, we'll just update the active dot
-            updateIndicator(container, i);
+            scrollToItem(container === imageIndicator ? 'image' : 'video', i);
         });
         container.appendChild(dot);
     }
+}
+
+// Function to scroll to specific item
+function scrollToItem(type, index) {
+    const gallery = type === 'image' ? imageGallery : videoGallery;
+    const indicator = type === 'image' ? imageIndicator : videoIndicator;
+    
+    if (!gallery) return;
+    
+    const items = gallery.querySelectorAll('.gallery-item');
+    if (items.length === 0) return;
+    
+    const itemWidth = items[0].offsetWidth + 15; // 15px gap
+    const scrollPosition = itemWidth * index;
+    
+    gallery.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+    });
+    
+    // Update current index and indicator
+    if (type === 'image') {
+        currentImageIndex = index;
+    } else {
+        currentVideoIndex = index;
+    }
+    
+    updateIndicator(indicator, index);
 }
 
 // Function to update indicator
@@ -243,6 +352,7 @@ function closeModal() {
     // Pause video if playing
     if (modalVideo.style.display !== 'none') {
         modalVideo.pause();
+        modalVideo.currentTime = 0;
     }
     
     mediaModal.classList.remove('active');
@@ -353,11 +463,12 @@ if (bookingForm) {
                     bookingSuccess.style.display = 'none';
                 }, 3000);
             } else {
-                throw new Error('Erro ao enviar agendamento');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erro ao enviar agendamento');
             }
         } catch (error) {
             console.error('Error submitting booking:', error);
-            bookingError.textContent = 'Erro ao enviar agendamento. Tente novamente.';
+            bookingError.textContent = error.message || 'Erro ao enviar agendamento. Tente novamente.';
             bookingError.style.display = 'block';
         } finally {
             // Reset button state
@@ -413,9 +524,50 @@ if (bookingModal) {
     });
 }
 
+// Add keyboard navigation
+document.addEventListener('keydown', (e) => {
+    if (mediaModal.classList.contains('active')) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    }
+});
+
 // Initialize galleries when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM carregado, iniciando galerias...');
-    loadImageGallery();
-    loadVideoGallery();
+    console.log('Image files to load:', imageFiles);
+    console.log('Video files to load:', videoFiles);
+    
+    // Load galleries with a small delay to ensure DOM is ready
+    setTimeout(() => {
+        loadImageGallery();
+        loadVideoGallery();
+    }, 100);
 });
+
+// Add debug info to page
+function addDebugInfo() {
+    const debugInfo = document.createElement('div');
+    debugInfo.style.cssText = `
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 10000;
+        font-family: monospace;
+    `;
+    debugInfo.innerHTML = `
+        <div>Env: ${isVercel ? 'Vercel' : 'Local'}</div>
+        <div>Images: ${imageFiles.length}</div>
+        <div>Videos: ${videoFiles.length}</div>
+    `;
+    document.body.appendChild(debugInfo);
+}
+
+// Uncomment the line below to enable debug info
+// addDebugInfo();
