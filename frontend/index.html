@@ -581,29 +581,41 @@
                 submitText.textContent = 'Enviando...';
                 submitBooking.disabled = true;
                 bookingError.style.display = 'none';
-                try {
-                    const response = await fetch(`${BACKEND_URL}/api/appointments`, { method: 'POST', body: formData });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Erro ao enviar agendamento');
-                    bookingSuccess.textContent = data.message || 'Sucesso! Redirecionando...';
-                    bookingForm.style.display = 'none';
-                    bookingSuccess.style.display = 'block';
-                    if (data.whatsappUrl) window.open(data.whatsappUrl, '_blank');
-                    setTimeout(() => {
-                        closeBookingModal();
-                        bookingForm.style.display = 'block';
-                        bookingSuccess.style.display = 'none';
-                        bookingForm.reset();
-                        fileName.textContent = 'Nenhum arquivo selecionado';
-                    }, 4000);
-                } catch (error) {
-                    bookingError.textContent = error.message;
-                    bookingError.style.display = 'block';
-                } finally {
+
+                // --- NOVA LÓGICA PARA WHATSAPP DIRETO ---
+                const fullName = document.getElementById('fullName').value;
+                const bodyPart = document.getElementById('bodyPart').value;
+                const additionalInfo = document.getElementById('additionalInfo').value;
+                const hasImage = tattooImage.files.length > 0;
+
+                const tattooArtistWhatsapp = "5547999713264";
+                
+                let message = `Olá! Gostaria de agendar uma tatuagem.\n\n`;
+                message += `*Nome:* ${fullName}\n`;
+                message += `*Parte do Corpo:* ${bodyPart}\n`;
+                if (additionalInfo) message += `*Detalhes:* ${additionalInfo}\n`;
+                if (hasImage) message += `\n_(Anexarei a imagem de referência na conversa.)_`;
+
+                const whatsappUrl = `https://wa.me/${tattooArtistWhatsapp}?text=${encodeURIComponent(message)}`;
+
+                // Abre a URL do WhatsApp
+                window.open(whatsappUrl, '_blank');
+
+                // Exibe mensagem de sucesso e reseta o formulário
+                bookingSuccess.textContent = 'Tudo pronto! Finalize o contato no WhatsApp.';
+                bookingForm.style.display = 'none';
+                bookingSuccess.style.display = 'block';
+
+                setTimeout(() => {
+                    closeBookingModal();
+                    bookingForm.style.display = 'block';
+                    bookingSuccess.style.display = 'none';
+                    bookingForm.reset();
+                    fileName.textContent = 'Nenhum arquivo selecionado';
                     submitSpinner.style.display = 'none';
                     submitText.textContent = 'Enviar Agendamento';
                     submitBooking.disabled = false;
-                }
+                }, 4000);
             });
         }
 
