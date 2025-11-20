@@ -1,136 +1,202 @@
 // app.js
-// Sample gallery data (would normally come from backend)
-const galleryItems = [
-    {
-        id: 1,
-        title: "Dragão Oriental",
-        artist: "Jhow",
-        category: "Tradicional",
-        description: "Tatuagem em estilo oriental com dragão em preto e cinza. Realizada em 3 sessões.",
-        imageUrl: "https://i.imgur.com/example1.jpg"
-    },
-    {
-        id: 2,
-        title: "Rosa Realista",
-        artist: "Jhow",
-        category: "Realismo",
-        description: "Rosa em estilo realista com sombreamento preciso e detalhes naturais.",
-        imageUrl: "https://i.imgur.com/example2.jpg"
-    },
-    {
-        id: 3,
-        title: "Geométrico Tribal",
-        artist: "Ana",
-        category: "Geométrico",
-        description: "Padrões geométricos inspirados em tribos antigas com simetria perfeita.",
-        imageUrl: "https://i.imgur.com/example3.jpg"
-    },
-    {
-        id: 4,
-        title: "Retrato em Preto e Branco",
-        artist: "Jhow",
-        category: "Retrato",
-        description: "Retrato realista em preto e branco com alto contraste e detalhes impressionantes.",
-        imageUrl: "https://i.imgur.com/example4.jpg"
-    },
-    {
-        id: 5,
-        title: "Mandala Colorida",
-        artist: "Ana",
-        category: "Mandala",
-        description: "Mandala intricada com cores vibrantes e padrões simétricos.",
-        imageUrl: "https://i.imgur.com/example5.jpg"
-    },
-    {
-        id: 6,
-        title: "Minimalista Linhas",
-        artist: "Carlos",
-        category: "Minimalista",
-        description: "Design minimalista com linhas finas e conceito abstrato.",
-        imageUrl: "https://i.imgur.com/example6.jpg"
-    },
-    {
-        id: 7,
-        title: "Old School Anchor",
-        artist: "Jhow",
-        category: "Old School",
-        description: "Âncora no estilo old school tradicional com cores vivas e contornos grossos.",
-        imageUrl: "https://i.imgur.com/example7.jpg"
-    },
-    {
-        id: 8,
-        title: "Aquarela Abstrata",
-        artist: "Ana",
-        category: "Aquarela",
-        description: "Efeito aquarela com cores que se misturam criando uma composição abstrata.",
-        imageUrl: "https://i.imgur.com/example8.jpg"
-    }
+
+// Arrays de imagens e vídeos (caminhos relativos)
+const imageFiles = [
+    'img/img1.jpg',
+    'img/img2.jpg',
+    'img/img3.jpg',
+    'img/img4.jpg',
+    'img/img5.jpg',
+    'img/img6.jpg',
+    'img/img7.jpg',
+    'img/img8.jpg',
+    'img/img9.jpg'
+];
+
+const videoFiles = [
+    'video/video1.mp4',
+    'video/video2.mp4',
+    'video/video3.mp4',
+    'video/video4.mp4',
+    'video/video5.mp4',
+    'video/video6.mp4',
+    'video/video7.mp4',
+    'video/video8.mp4'
 ];
 
 // DOM Elements
-const galleryContainer = document.getElementById('galleryContainer');
-const imageModal = document.getElementById('imageModal');
-const modalImg = document.getElementById('modalImg');
+const imageGallery = document.getElementById('imageGallery');
+const videoGallery = document.getElementById('videoGallery');
+const scrollLeftImages = document.getElementById('scrollLeftImages');
+const scrollRightImages = document.getElementById('scrollRightImages');
+const scrollLeftVideos = document.getElementById('scrollLeftVideos');
+const scrollRightVideos = document.getElementById('scrollRightVideos');
+const imageIndicator = document.getElementById('imageIndicator');
+const videoIndicator = document.getElementById('videoIndicator');
+const mediaModal = document.getElementById('mediaModal');
+const modalImage = document.getElementById('modalImage');
+const modalVideo = document.getElementById('modalVideo');
 const modalTitle = document.getElementById('modalTitle');
 const modalArtist = document.getElementById('modalArtist');
 const modalCategory = document.getElementById('modalCategory');
 const modalDescription = document.getElementById('modalDescription');
 const modalClose = document.getElementById('modalClose');
-const bookingClose = document.getElementById('bookingClose');
-const bookingForm = document.getElementById('bookingForm');
-const tattooImage = document.getElementById('tattooImage');
-const fileName = document.getElementById('fileName');
-const submitBooking = document.getElementById('submitBooking');
-const submitSpinner = document.getElementById('submitSpinner');
-const submitText = document.getElementById('submitText');
-const bookingError = document.getElementById('bookingError');
-const bookingSuccess = document.getElementById('bookingSuccess');
 
 // Backend URL from config
 const BACKEND_URL = window.APP_CONFIG ? window.APP_CONFIG.BACKEND_URL : 'https://jhontattoo-backend.onrender.com';
 
-// Populate gallery with items
-function populateGallery() {
-    if (!galleryContainer) return;
-    
-    galleryContainer.innerHTML = '';
-    
-    galleryItems.forEach(item => {
+// Current visible item index for each gallery
+let currentImageIndex = 0;
+let currentVideoIndex = 0;
+
+// Function to load image gallery
+function loadImageGallery() {
+    if (!imageGallery) return;
+
+    imageFiles.forEach((src, index) => {
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
-        galleryItem.innerHTML = `
-            <img src="https://via.placeholder.com/400x400/333333/ffffff?text=${encodeURIComponent(item.title)}" alt="${item.title}">
-            <div class="gallery-overlay">
-                <h3 class="gallery-title">${item.title}</h3>
-                <p class="gallery-category">${item.category}</p>
-            </div>
-        `;
-        
-        galleryItem.addEventListener('click', () => openModal(item));
-        galleryContainer.appendChild(galleryItem);
+        galleryItem.setAttribute('data-index', index);
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = `Tattoo image ${index + 1}`;
+        img.loading = 'lazy'; // Lazy loading for better performance
+
+        galleryItem.appendChild(img);
+        galleryItem.addEventListener('click', () => openMediaModal('image', src, index));
+
+        imageGallery.appendChild(galleryItem);
+    });
+
+    // Create indicator dots
+    createIndicator(imageIndicator, imageFiles.length, 0);
+}
+
+// Function to load video gallery
+function loadVideoGallery() {
+    if (!videoGallery) return;
+
+    videoFiles.forEach((src, index) => {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.setAttribute('data-index', index);
+
+        const video = document.createElement('video');
+        video.src = src;
+        video.alt = `Tattoo video ${index + 1}`;
+        video.preload = 'metadata'; // Only load metadata for performance
+
+        const playIcon = document.createElement('div');
+        playIcon.className = 'play-icon';
+
+        galleryItem.appendChild(video);
+        galleryItem.appendChild(playIcon);
+        galleryItem.addEventListener('click', () => openMediaModal('video', src, index));
+
+        videoGallery.appendChild(galleryItem);
+    });
+
+    // Create indicator dots
+    createIndicator(videoIndicator, videoFiles.length, 0);
+}
+
+// Function to create indicator dots
+function createIndicator(container, count, activeIndex) {
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'indicator-dot';
+        if (i === activeIndex) {
+            dot.classList.add('active');
+        }
+        dot.addEventListener('click', () => {
+            // This would scroll to the specific item
+            // For simplicity, we'll just update the active dot
+            updateIndicator(container, i);
+        });
+        container.appendChild(dot);
+    }
+}
+
+// Function to update indicator
+function updateIndicator(container, activeIndex) {
+    const dots = container.querySelectorAll('.indicator-dot');
+    dots.forEach((dot, index) => {
+        if (index === activeIndex) {
+            dot.classList.add('active');
+        } else {
+            dot.classList.remove('active');
+        }
     });
 }
 
-// Open image modal
-function openModal(item) {
-    if (!imageModal || !modalImg || !modalTitle || !modalArtist || !modalCategory || !modalDescription) return;
-    
-    modalImg.src = "https://via.placeholder.com/600x600/333333/ffffff?text=" + encodeURIComponent(item.title);
-    modalTitle.textContent = item.title;
-    modalArtist.textContent = `Artista: ${item.artist}`;
-    modalCategory.textContent = `Categoria: ${item.category}`;
-    modalDescription.textContent = item.description;
-    
-    imageModal.classList.add('active');
+// Function to open media modal
+function openMediaModal(type, src, index) {
+    // Hide both media elements first
+    modalImage.style.display = 'none';
+    modalVideo.style.display = 'none';
+
+    if (type === 'image') {
+        modalImage.src = src;
+        modalImage.style.display = 'block';
+        modalTitle.textContent = `Tatuagem ${index + 1}`;
+        modalDescription.textContent = 'Imagem do portfólio do estúdio.';
+    } else if (type === 'video') {
+        modalVideo.src = src;
+        modalVideo.style.display = 'block';
+        modalTitle.textContent = `Processo de Tatuagem ${index + 1}`;
+        modalDescription.textContent = 'Vídeo do processo de criação no estúdio.';
+    }
+
+    // Update other modal details
+    modalArtist.textContent = 'Artista: Jhow';
+    modalCategory.textContent = `Categoria: ${type === 'image' ? 'Fotos' : 'Vídeos'}`;
+
+    mediaModal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-// Close image modal
+// Function to close modal
 function closeModal() {
-    if (!imageModal) return;
+    if (!mediaModal) return;
     
-    imageModal.classList.remove('active');
+    // Pause video if playing
+    if (modalVideo.style.display !== 'none') {
+        modalVideo.pause();
+    }
+    
+    mediaModal.classList.remove('active');
     document.body.style.overflow = 'auto';
+}
+
+// Function to scroll gallery
+function scrollGallery(gallery, direction, indicator, currentIndex) {
+    if (!gallery) return currentIndex;
+    
+    const itemWidth = gallery.querySelector('.gallery-item').offsetWidth + 15; // 15px gap
+    const scrollAmount = itemWidth * 3; // Scroll 3 items at a time
+    
+    if (direction === 'left') {
+        gallery.scrollLeft -= scrollAmount;
+        currentIndex = Math.max(0, currentIndex - 3);
+    } else {
+        gallery.scrollLeft += scrollAmount;
+        currentIndex = Math.min(
+            (gallery.children.length - 1), 
+            currentIndex + 3
+        );
+    }
+    
+    // Update indicator
+    if (indicator) {
+        updateIndicator(indicator, currentIndex);
+    }
+    
+    return currentIndex;
 }
 
 // Close booking modal
@@ -192,37 +258,27 @@ if (bookingForm) {
                 body: formData
             });
             
-            const data = await response.json();
-
             if (response.ok) {
-                // Atualiza a mensagem de sucesso com a resposta do backend
-                bookingSuccess.textContent = data.message || 'Sucesso! Redirecionando para o WhatsApp...';
+                // Show success message
                 bookingForm.style.display = 'none';
                 bookingSuccess.style.display = 'block';
-
-                // Abre a URL do WhatsApp em uma nova aba
-                if (data.whatsappUrl) {
-                    window.open(data.whatsappUrl, '_blank');
-                }
-
+                
                 // Reset form
                 bookingForm.reset();
                 fileName.textContent = 'Nenhum arquivo selecionado';
                 
-                // Fecha o modal e reseta a UI após um tempo
+                // Close modal after 3 seconds
                 setTimeout(() => {
                     closeBookingModal();
                     bookingForm.style.display = 'block';
                     bookingSuccess.style.display = 'none';
-                    // Reseta o texto padrão da mensagem de sucesso
-                    bookingSuccess.textContent = 'Agendamento enviado com sucesso! Entraremos em contato em breve.';
-                }, 4000); // Aumentado para 4 segundos para dar tempo de ler a mensagem
+                }, 3000);
             } else {
-                throw new Error(data.error || 'Erro ao enviar agendamento');
+                throw new Error('Erro ao enviar agendamento');
             }
         } catch (error) {
             console.error('Error submitting booking:', error);
-            bookingError.textContent = error.message || 'Erro ao enviar agendamento. Tente novamente.';
+            bookingError.textContent = 'Erro ao enviar agendamento. Tente novamente.';
             bookingError.style.display = 'block';
         } finally {
             // Reset button state
@@ -238,9 +294,33 @@ if (modalClose) {
     modalClose.addEventListener('click', closeModal);
 }
 
-if (imageModal) {
-    imageModal.addEventListener('click', (e) => {
-        if (e.target === imageModal) closeModal();
+if (mediaModal) {
+    mediaModal.addEventListener('click', (e) => {
+        if (e.target === mediaModal) closeModal();
+    });
+}
+
+if (scrollLeftImages) {
+    scrollLeftImages.addEventListener('click', () => {
+        currentImageIndex = scrollGallery(imageGallery, 'left', imageIndicator, currentImageIndex);
+    });
+}
+
+if (scrollRightImages) {
+    scrollRightImages.addEventListener('click', () => {
+        currentImageIndex = scrollGallery(imageGallery, 'right', imageIndicator, currentImageIndex);
+    });
+}
+
+if (scrollLeftVideos) {
+    scrollLeftVideos.addEventListener('click', () => {
+        currentVideoIndex = scrollGallery(videoGallery, 'left', videoIndicator, currentVideoIndex);
+    });
+}
+
+if (scrollRightVideos) {
+    scrollRightVideos.addEventListener('click', () => {
+        currentVideoIndex = scrollGallery(videoGallery, 'right', videoIndicator, currentVideoIndex);
     });
 }
 
@@ -254,7 +334,8 @@ if (bookingModal) {
     });
 }
 
-// Initialize gallery quando o DOM estiver carregado
+// Initialize galleries when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    populateGallery();
+    loadImageGallery();
+    loadVideoGallery();
 });

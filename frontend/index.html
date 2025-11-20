@@ -50,17 +50,43 @@
     <section class="gallery-section">
         <div class="container">
             <h2 class="section-title">Nossos Trabalhos</h2>
-            <div class="gallery-container" id="galleryContainer">
-                <!-- Gallery items will be dynamically inserted here -->
+            
+            <!-- Images Gallery -->
+            <div class="gallery-category">
+                <h3 class="category-title">Galeria de Fotos</h3>
+                <div class="gallery-scroll-container">
+                    <button class="scroll-btn scroll-left" id="scrollLeftImages">‹</button>
+                    <div class="gallery-scroll" id="imageGallery">
+                        <!-- Images will be loaded here by JavaScript -->
+                    </div>
+                    <button class="scroll-btn scroll-right" id="scrollRightImages">›</button>
+                </div>
+                <div class="gallery-indicator" id="imageIndicator"></div>
+            </div>
+            
+            <!-- Videos Gallery -->
+            <div class="gallery-category">
+                <h3 class="category-title">Galeria de Vídeos</h3>
+                <div class="gallery-scroll-container">
+                    <button class="scroll-btn scroll-left" id="scrollLeftVideos">‹</button>
+                    <div class="gallery-scroll" id="videoGallery">
+                        <!-- Videos will be loaded here by JavaScript -->
+                    </div>
+                    <button class="scroll-btn scroll-right" id="scrollRightVideos">›</button>
+                </div>
+                <div class="gallery-indicator" id="videoIndicator"></div>
             </div>
         </div>
     </section>
 
-    <!-- Image Modal -->
-    <div class="modal" id="imageModal">
+    <!-- Media Modal -->
+    <div class="modal" id="mediaModal">
         <div class="modal-content">
             <button class="modal-close" id="modalClose">&times;</button>
-            <img class="modal-img" id="modalImg" src="" alt="">
+            <div class="modal-media-container">
+                <img class="modal-media" id="modalImage" src="" alt="" style="display: none;">
+                <video class="modal-media" id="modalVideo" controls style="display: none;"></video>
+            </div>
             <div class="modal-info">
                 <h3 class="modal-title" id="modalTitle"></h3>
                 <div class="modal-details">
@@ -81,7 +107,7 @@
             <div class="auth-body">
                 <p>Faça login para agendar sua tatuagem</p>
                 <button class="google-btn" id="googleLogin">
-                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=" alt="Google">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik0wIDBoMTh2MThIMHoiLz48L2c+PC9zdmc+" alt="Google">
                     Continuar com Google
                 </button>
             </div>
