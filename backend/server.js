@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
-const { initializeApp, cert } = require('firebase-admin/app');
+const { initializeApp, cert, getApp } = require('firebase-admin/app');
 const { getStorage } = require('firebase-admin/storage');
 
 const galleryRoutes = require('./routes/galleryRoutes');
@@ -105,12 +105,17 @@ app.post('/api/appointments', upload.single('tattooImage'), async (req, res) => 
 
 // Health check com info do Firebase
 app.get('/api/health', (req, res) => {
-  const rebaseAp
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'Jhow Tattoo Backend is running!',
-    firebase: firebaseApp.name ? 'connected' 
-  });
+  try {
+    const firebaseApp = getApp(); // Pega a instância do app Firebase inicializado
+    res.status(200).json({
+      status: 'OK',
+      message: 'Jhow Tattoo Backend is running!',
+      firebase: firebaseApp.name ? 'connected' : 'error',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'ERROR', message: 'Firebase not initialized', error: error.message });
+  }
 });
 
 // Mock data para desenvolvimento
