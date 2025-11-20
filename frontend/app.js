@@ -11,26 +11,26 @@ console.log('Current URL:', window.location.href);
 // No Vercel, os caminhos são relativos à raiz do deploy
 // Use URLs completas do Firebase Storage para garantir que funcionem
 const imageFiles = [
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG1_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG2_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG3_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG4_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG5_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG6_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG7_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG8_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DA_IMG9_DO_FIREBASE_STORAGE'
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img6_demyug.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img9_eisonr.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img7_svykkg.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img4_svwagq.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img8_p78lzc.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img1_s9fjfm.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img3_ftxokr.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img5_bo1yte.jpg',
+'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img2_fc72uh.jpg'
 ];
 
 const videoFiles = [
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO1_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO2_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO3_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO4_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO5_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO6_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO7_DO_FIREBASE_STORAGE',
-    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO8_DO_FIREBASE_STORAGE'
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669773/video7_xymmus.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669771/video1_ncm0fq.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669771/video5_qdd82p.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669768/video4_ld9wnh.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669768/video3_k6fdgu.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669764/video8_pts4td.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669760/video6_whavlf.mp4',
+'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669759/video2_kkhm6b.mp4'
 ];
 
 // DOM Elements
