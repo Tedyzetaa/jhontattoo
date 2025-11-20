@@ -9,28 +9,28 @@ console.log('Environment:', isVercel ? 'Vercel' : 'Local');
 console.log('Current URL:', window.location.href);
 
 // No Vercel, os caminhos são relativos à raiz do deploy
-// Use caminhos absolutos começando com / para garantir que funcionem no Vercel
+// Use URLs completas do Firebase Storage para garantir que funcionem
 const imageFiles = [
-    '/img/img1.jpg',
-    '/img/img2.jpg',
-    '/img/img3.jpg',
-    '/img/img4.jpg',
-    '/img/img5.jpg',
-    '/img/img6.jpg',
-    '/img/img7.jpg',
-    '/img/img8.jpg',
-    '/img/img9.jpg'
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG1_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG2_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG3_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG4_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG5_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG6_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG7_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG8_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DA_IMG9_DO_FIREBASE_STORAGE'
 ];
 
 const videoFiles = [
-    '/video/video1.mp4',
-    '/video/video2.mp4',
-    '/video/video3.mp4',
-    '/video/video4.mp4',
-    '/video/video5.mp4',
-    '/video/video6.mp4',
-    '/video/video7.mp4',
-    '/video/video8.mp4'
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO1_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO2_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO3_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO4_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO5_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO6_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO7_DO_FIREBASE_STORAGE',
+    'COLE_AQUI_A_URL_PUBLICA_DO_VIDEO8_DO_FIREBASE_STORAGE'
 ];
 
 // DOM Elements

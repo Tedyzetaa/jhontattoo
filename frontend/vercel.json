@@ -1,14 +1,12 @@
 {
   "version": 2,
   "routes": [
+    { "src": "/img/(.*)", "dest": "/img/$1" },
+    { "src": "/video/(.*)", "dest": "/video/$1" },
     { "src": "/style.css", "dest": "/style.css" },
     { "src": "/config.js", "dest": "/config.js" },
     { "src": "/auth.js", "dest": "/auth.js" },
     { "src": "/app.js", "dest": "/app.js" },
-    { "src": "/img/(.*)", "dest": "/img/$1" },
-    { "src": "/video/(.*)", "dest": "/video/$1" },
-    { "src": "/css/(.*)", "dest": "/css/$1" }, 
-    { "src": "/js/(.*)", "dest": "/js/$1" }, 
     { "src": "/(.*\\.(ico|webmanifest))", "dest": "/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
