@@ -1,0 +1,10 @@
+name: jhow-tattoo-backend
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - nodejs=18
+  - pip
+  - pip:
+    - firebase-admin
