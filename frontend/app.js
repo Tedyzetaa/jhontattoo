@@ -49,53 +49,129 @@ const BACKEND_URL = window.APP_CONFIG ? window.APP_CONFIG.BACKEND_URL : 'https:/
 let currentImageIndex = 0;
 let currentVideoIndex = 0;
 
+// Function to check if file exists
+async function checkFileExists(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch (error) {
+        console.error(`Error checking file ${url}:`, error);
+        return false;
+    }
+}
+
+// Function to create placeholder for missing files
+function createPlaceholder(type, index) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'gallery-item placeholder';
+    placeholder.innerHTML = `
+        <div class="placeholder-content">
+            <div class="placeholder-icon">${type === 'image' ? '📷' : '🎥'}</div>
+            <div class="placeholder-text">${type === 'image' ? 'Imagem' : 'Vídeo'} ${index + 1}<br><small>Não encontrado</small></div>
+        </div>
+    `;
+    return placeholder;
+}
+
 // Function to load image gallery
-function loadImageGallery() {
+async function loadImageGallery() {
     if (!imageGallery) return;
 
-    imageFiles.forEach((src, index) => {
+    imageGallery.innerHTML = '<div class="loading">Carregando imagens...</div>';
+
+    for (let i = 0; i < imageFiles.length; i++) {
+        const src = imageFiles[i];
+        const fileExists = await checkFileExists(src);
+        
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
-        galleryItem.setAttribute('data-index', index);
+        galleryItem.setAttribute('data-index', i);
 
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = `Tattoo image ${index + 1}`;
-        img.loading = 'lazy'; // Lazy loading for better performance
+        if (fileExists) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = `Tattoo image ${i + 1}`;
+            img.loading = 'lazy';
+            
+            // Add error handling for individual images
+            img.onerror = function() {
+                console.error(`Erro ao carregar imagem: ${src}`);
+                galleryItem.innerHTML = `
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">❌</div>
+                        <div class="placeholder-text">Erro ao carregar<br><small>${src}</small></div>
+                    </div>
+                `;
+                galleryItem.classList.add('error');
+            };
 
-        galleryItem.appendChild(img);
-        galleryItem.addEventListener('click', () => openMediaModal('image', src, index));
+            galleryItem.appendChild(img);
+            galleryItem.addEventListener('click', () => openMediaModal('image', src, i));
+        } else {
+            galleryItem.appendChild(createPlaceholder('image', i));
+            console.warn(`Imagem não encontrada: ${src}`);
+        }
 
         imageGallery.appendChild(galleryItem);
-    });
+    }
+
+    // Remove loading message
+    const loadingMsg = imageGallery.querySelector('.loading');
+    if (loadingMsg) loadingMsg.remove();
 
     // Create indicator dots
     createIndicator(imageIndicator, imageFiles.length, 0);
 }
 
 // Function to load video gallery
-function loadVideoGallery() {
+async function loadVideoGallery() {
     if (!videoGallery) return;
 
-    videoFiles.forEach((src, index) => {
+    videoGallery.innerHTML = '<div class="loading">Carregando vídeos...</div>';
+
+    for (let i = 0; i < videoFiles.length; i++) {
+        const src = videoFiles[i];
+        const fileExists = await checkFileExists(src);
+        
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
-        galleryItem.setAttribute('data-index', index);
+        galleryItem.setAttribute('data-index', i);
 
-        const video = document.createElement('video');
-        video.src = src;
-        video.alt = `Tattoo video ${index + 1}`;
-        video.preload = 'metadata'; // Only load metadata for performance
+        if (fileExists) {
+            const video = document.createElement('video');
+            video.src = src;
+            video.alt = `Tattoo video ${i + 1}`;
+            video.preload = 'metadata';
+            
+            // Add error handling for individual videos
+            video.onerror = function() {
+                console.error(`Erro ao carregar vídeo: ${src}`);
+                galleryItem.innerHTML = `
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">❌</div>
+                        <div class="placeholder-text">Erro ao carregar<br><small>${src}</small></div>
+                    </div>
+                `;
+                galleryItem.classList.add('error');
+            };
 
-        const playIcon = document.createElement('div');
-        playIcon.className = 'play-icon';
+            const playIcon = document.createElement('div');
+            playIcon.className = 'play-icon';
 
-        galleryItem.appendChild(video);
-        galleryItem.appendChild(playIcon);
-        galleryItem.addEventListener('click', () => openMediaModal('video', src, index));
+            galleryItem.appendChild(video);
+            galleryItem.appendChild(playIcon);
+            galleryItem.addEventListener('click', () => openMediaModal('video', src, i));
+        } else {
+            galleryItem.appendChild(createPlaceholder('video', i));
+            console.warn(`Vídeo não encontrado: ${src}`);
+        }
 
         videoGallery.appendChild(galleryItem);
-    });
+    }
+
+    // Remove loading message
+    const loadingMsg = videoGallery.querySelector('.loading');
+    if (loadingMsg) loadingMsg.remove();
 
     // Create indicator dots
     createIndicator(videoIndicator, videoFiles.length, 0);
@@ -177,7 +253,10 @@ function closeModal() {
 function scrollGallery(gallery, direction, indicator, currentIndex) {
     if (!gallery) return currentIndex;
     
-    const itemWidth = gallery.querySelector('.gallery-item').offsetWidth + 15; // 15px gap
+    const items = gallery.querySelectorAll('.gallery-item');
+    if (items.length === 0) return currentIndex;
+    
+    const itemWidth = items[0].offsetWidth + 15; // 15px gap
     const scrollAmount = itemWidth * 3; // Scroll 3 items at a time
     
     if (direction === 'left') {
@@ -186,7 +265,7 @@ function scrollGallery(gallery, direction, indicator, currentIndex) {
     } else {
         gallery.scrollLeft += scrollAmount;
         currentIndex = Math.min(
-            (gallery.children.length - 1), 
+            (items.length - 1), 
             currentIndex + 3
         );
     }
@@ -336,6 +415,7 @@ if (bookingModal) {
 
 // Initialize galleries when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, iniciando galerias...');
     loadImageGallery();
     loadVideoGallery();
 });
