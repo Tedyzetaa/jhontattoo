@@ -221,8 +221,414 @@
     </footer>
 
     <!-- Carregar configurações primeiro -->
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
+    <script>
+        // =================================================================
+        // INÍCIO: Conteúdo de config.js
+        // =================================================================
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDsHzmc1HNyTroBpnTBPCdYJEqz5VAnToI", // Copie do painel do Firebase
+            authDomain: "jhontattoo-4922e.firebaseapp.com",
+            projectId: "jhontattoo-4922e",
+            storageBucket: "jhontattoo-4922e.appspot.com",
+            messagingSenderId: "273673583724", // Copie do painel do Firebase
+            appId: "1:273673583724:web:e38dae93beb69ae077ec49" // Copie do painel do Firebase
+        };
+
+        const BACKEND_URL_CONFIG = "https://jhontattoo-backend.onrender.com";
+
+        // Exportar para uso global
+        window.APP_CONFIG = {
+            FIREBASE_CONFIG,
+            BACKEND_URL: BACKEND_URL_CONFIG
+        };
+
+        // =================================================================
+        // FIM: Conteúdo de config.js
+        // =================================================================
+
+
+        // =================================================================
+        // INÍCIO: Conteúdo de auth.js
+        // =================================================================
+        if (!window.APP_CONFIG || !window.APP_CONFIG.FIREBASE_CONFIG) {
+            console.error('Configurações do Firebase não encontradas. Verifique o arquivo config.js');
+            document.addEventListener('DOMContentLoaded', function() {
+                const bookBtn = document.getElementById('bookBtn');
+                if (bookBtn) {
+                    bookBtn.textContent = 'Erro de Configuração';
+                    bookBtn.style.backgroundColor = '#ff4444';
+                    bookBtn.disabled = true;
+                }
+            });
+        } else {
+            try {
+                firebase.initializeApp(window.APP_CONFIG.FIREBASE_CONFIG);
+                console.log('Firebase inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar Firebase:', error);
+            }
+        }
+
+        const auth = firebase.auth();
+        let auth_currentUser = null; // Renomeado para evitar conflito
+
+        const auth_bookBtn = document.getElementById('bookBtn');
+        const auth_authModal = document.getElementById('authModal');
+        const auth_googleLogin = document.getElementById('googleLogin');
+        const auth_bookingModal = document.getElementById('bookingModal');
+
+        auth.onAuthStateChanged((user) => {
+            auth_currentUser = user;
+            auth_updateUI(user);
+        });
+
+        function auth_updateUI(user) {
+            if (user) {
+                auth_bookBtn.innerHTML = `
+                    <div class="user-info">
+                        <img src="${user.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6bTAgMTdjLTIuNjcgMC04IDEuMzQtOCA0djJoMTZ2LTJjMC0yLjY2LTUuMzMtNC04LTR6Ii8+PC9zdmc+'}" 
+                             alt="Avatar" class="user-avatar">
+                        <span class="user-name">${user.displayName || 'Usuário'}</span>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn">Sair</button>
+                `;
+            } else {
+                auth_bookBtn.innerHTML = 'Agende sua Tattoo';
+            }
+        }
+
+        function auth_handleBookBtnClick(event) {
+            if (event.target.closest('#logoutBtn')) {
+                auth_handleLogout();
+                return;
+            }
+            if (auth_currentUser) {
+                openBookingModal(); // Função de app.js
+            } else {
+                auth_openAuthModal();
+            }
+        }
+
+        function auth_handleGoogleLogin() {
+            if (!firebase.apps.length) {
+                alert('Erro de configuração do Firebase. Por favor, recarregue a página.');
+                return;
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    console.log('User signed in:', result.user);
+                    auth_closeAuthModal();
+                })
+                .catch((error) => {
+                    console.error('Error during Google login:', error);
+                    let errorMessage = 'Erro ao fazer login com Google. Tente novamente.';
+                    if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'Popup bloqueado. Por favor, permita popups para este site.';
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage = 'Login cancelado.';
+                    } else if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage = 'Domínio não autorizado. Verifique as configurações do Firebase.';
+                    } else if (error.code.includes('api-key-not-valid')) {
+                        errorMessage = 'Chave API inválida. Verifique as configurações do Firebase.';
+                    }
+                    alert(errorMessage);
+                });
+        }
+
+        function auth_handleLogout() {
+            auth.signOut().then(() => {
+                console.log('User signed out');
+            }).catch((error) => {
+                console.error('Error during logout:', error);
+            });
+        }
+
+        function auth_openAuthModal() {
+            auth_authModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function auth_closeAuthModal() {
+            auth_authModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        if (auth_bookBtn) {
+            auth_bookBtn.addEventListener('click', auth_handleBookBtnClick);
+        }
+        if (auth_googleLogin) {
+            auth_googleLogin.addEventListener('click', auth_handleGoogleLogin);
+        }
+        if (auth_authModal) {
+            auth_authModal.addEventListener('click', (e) => {
+                if (e.target === auth_authModal) auth_closeAuthModal();
+            });
+        }
+        // =================================================================
+        // FIM: Conteúdo de auth.js
+        // =================================================================
+
+
+        // =================================================================
+        // INÍCIO: Conteúdo de app.js
+        // =================================================================
+        const isVercel = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('now.sh');
+
+        console.log('Environment:', isVercel ? 'Vercel' : 'Local');
+        console.log('Current URL:', window.location.href);
+
+        const imageFiles = [
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img6_demyug.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img9_eisonr.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img7_svykkg.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img4_svwagq.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669701/img8_p78lzc.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img1_s9fjfm.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img3_ftxokr.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img5_bo1yte.jpg',
+            'https://res.cloudinary.com/dgvwgvial/image/upload/v1763669700/img2_fc72uh.jpg'
+        ];
+
+        const videoFiles = [
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669773/video7_xymmus.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669771/video1_ncm0fq.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669771/video5_qdd82p.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669768/video4_ld9wnh.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669768/video3_k6fdgu.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669764/video8_pts4td.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669760/video6_whavlf.mp4',
+            'https://res.cloudinary.com/dgvwgvial/video/upload/v1763669759/video2_kkhm6b.mp4'
+        ];
+
+        const imageGallery = document.getElementById('imageGallery');
+        const videoGallery = document.getElementById('videoGallery');
+        const scrollLeftImages = document.getElementById('scrollLeftImages');
+        const scrollRightImages = document.getElementById('scrollRightImages');
+        const scrollLeftVideos = document.getElementById('scrollLeftVideos');
+        const scrollRightVideos = document.getElementById('scrollRightVideos');
+        const imageIndicator = document.getElementById('imageIndicator');
+        const videoIndicator = document.getElementById('videoIndicator');
+        const mediaModal = document.getElementById('mediaModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalVideo = document.getElementById('modalVideo');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalArtist = document.getElementById('modalArtist');
+        const modalCategory = document.getElementById('modalCategory');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalClose = document.getElementById('modalClose');
+        const bookingClose = document.getElementById('bookingClose');
+        const bookingForm = document.getElementById('bookingForm');
+        const tattooImage = document.getElementById('tattooImage');
+        const fileName = document.getElementById('fileName');
+        const submitBooking = document.getElementById('submitBooking');
+        const submitSpinner = document.getElementById('submitSpinner');
+        const submitText = document.getElementById('submitText');
+        const bookingError = document.getElementById('bookingError');
+        const bookingSuccess = document.getElementById('bookingSuccess');
+        const bookingModal = document.getElementById('bookingModal'); // Já definido em auth.js, mas referenciado aqui
+
+        const BACKEND_URL = window.APP_CONFIG ? window.APP_CONFIG.BACKEND_URL : 'https://jhontattoo-backend.onrender.com';
+
+        let currentImageIndex = 0;
+        let currentVideoIndex = 0;
+
+        function createPlaceholder(type, index) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'gallery-item placeholder';
+            placeholder.innerHTML = `<div class="placeholder-content"><div class="placeholder-icon">${type === 'image' ? '📷' : '🎥'}</div><div class="placeholder-text">${type === 'image' ? 'Imagem' : 'Vídeo'} ${index + 1}<br><small>Carregando...</small></div></div>`;
+            return placeholder;
+        }
+
+        async function loadImageGallery() {
+            if (!imageGallery) return;
+            imageGallery.innerHTML = '<div class="loading">Carregando imagens...</div>';
+            const loadPromises = imageFiles.map(async (src, i) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.setAttribute('data-index', i);
+                const img = new Image();
+                img.src = src;
+                img.alt = `Tattoo image ${i + 1}`;
+                img.loading = 'lazy';
+                img.onload = () => galleryItem.classList.add('loaded');
+                img.onerror = () => {
+                    galleryItem.innerHTML = `<div class="placeholder-content"><div class="placeholder-icon">❌</div><div class="placeholder-text">Erro</div></div>`;
+                    galleryItem.classList.add('error');
+                };
+                galleryItem.appendChild(img);
+                galleryItem.addEventListener('click', () => openMediaModal('image', src, i));
+                return galleryItem;
+            });
+            const galleryItems = await Promise.all(loadPromises);
+            imageGallery.innerHTML = '';
+            galleryItems.forEach(item => imageGallery.appendChild(item));
+            createIndicator(imageIndicator, imageFiles.length, 0);
+        }
+
+        async function loadVideoGallery() {
+            if (!videoGallery) return;
+            videoGallery.innerHTML = '<div class="loading">Carregando vídeos...</div>';
+            const loadPromises = videoFiles.map(async (src, i) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.setAttribute('data-index', i);
+                const video = document.createElement('video');
+                video.src = src;
+                video.preload = 'metadata';
+                video.muted = true;
+                const playIcon = document.createElement('div');
+                playIcon.className = 'play-icon';
+                video.onloadeddata = () => galleryItem.classList.add('loaded');
+                video.onerror = () => {
+                    galleryItem.innerHTML = `<div class="placeholder-content"><div class="placeholder-icon">❌</div><div class="placeholder-text">Erro</div></div>`;
+                    galleryItem.classList.add('error');
+                };
+                galleryItem.appendChild(video);
+                galleryItem.appendChild(playIcon);
+                galleryItem.addEventListener('click', () => openMediaModal('video', src, i));
+                return galleryItem;
+            });
+            const galleryItems = await Promise.all(loadPromises);
+            videoGallery.innerHTML = '';
+            galleryItems.forEach(item => videoGallery.appendChild(item));
+            createIndicator(videoIndicator, videoFiles.length, 0);
+        }
+
+        function createIndicator(container, count, activeIndex) {
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'indicator-dot';
+                if (i === activeIndex) dot.classList.add('active');
+                dot.addEventListener('click', () => scrollToItem(container === imageIndicator ? 'image' : 'video', i));
+                container.appendChild(dot);
+            }
+        }
+
+        function scrollToItem(type, index) {
+            const gallery = type === 'image' ? imageGallery : videoGallery;
+            if (!gallery) return;
+            const items = gallery.querySelectorAll('.gallery-item');
+            if (items.length === 0) return;
+            const itemWidth = items[0].offsetWidth + 15;
+            gallery.scrollTo({ left: itemWidth * index, behavior: 'smooth' });
+            if (type === 'image') currentImageIndex = index;
+            else currentVideoIndex = index;
+            updateIndicator(type === 'image' ? imageIndicator : videoIndicator, index);
+        }
+
+        function updateIndicator(container, activeIndex) {
+            const dots = container.querySelectorAll('.indicator-dot');
+            dots.forEach((dot, index) => dot.classList.toggle('active', index === activeIndex));
+        }
+
+        function openMediaModal(type, src, index) {
+            modalImage.style.display = 'none';
+            modalVideo.style.display = 'none';
+            if (type === 'image') {
+                modalImage.src = src;
+                modalImage.style.display = 'block';
+                modalTitle.textContent = `Tatuagem ${index + 1}`;
+            } else {
+                modalVideo.src = src;
+                modalVideo.style.display = 'block';
+                modalTitle.textContent = `Processo de Tatuagem ${index + 1}`;
+            }
+            mediaModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            if (!mediaModal) return;
+            if (modalVideo.style.display !== 'none') modalVideo.pause();
+            mediaModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openBookingModal() {
+            bookingModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBookingModal() {
+            if (!bookingModal) return;
+            bookingModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        if (tattooImage) {
+            tattooImage.addEventListener('change', function() {
+                fileName.textContent = this.files && this.files[0] ? this.files[0].name : 'Nenhum arquivo selecionado';
+            });
+        }
+
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    bookingError.textContent = 'Você precisa estar logado para agendar.';
+                    bookingError.style.display = 'block';
+                    return;
+                }
+                const formData = new FormData(bookingForm);
+                formData.append('userId', user.uid);
+                formData.append('userEmail', user.email);
+                submitSpinner.style.display = 'inline-block';
+                submitText.textContent = 'Enviando...';
+                submitBooking.disabled = true;
+                bookingError.style.display = 'none';
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/appointments`, { method: 'POST', body: formData });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Erro ao enviar agendamento');
+                    bookingSuccess.textContent = data.message || 'Sucesso! Redirecionando...';
+                    bookingForm.style.display = 'none';
+                    bookingSuccess.style.display = 'block';
+                    if (data.whatsappUrl) window.open(data.whatsappUrl, '_blank');
+                    setTimeout(() => {
+                        closeBookingModal();
+                        bookingForm.style.display = 'block';
+                        bookingSuccess.style.display = 'none';
+                        bookingForm.reset();
+                        fileName.textContent = 'Nenhum arquivo selecionado';
+                    }, 4000);
+                } catch (error) {
+                    bookingError.textContent = error.message;
+                    bookingError.style.display = 'block';
+                } finally {
+                    submitSpinner.style.display = 'none';
+                    submitText.textContent = 'Enviar Agendamento';
+                    submitBooking.disabled = false;
+                }
+            });
+        }
+
+        if (modalClose) modalClose.addEventListener('click', closeModal);
+        if (mediaModal) mediaModal.addEventListener('click', (e) => { if (e.target === mediaModal) closeModal(); });
+        if (scrollLeftImages) scrollLeftImages.addEventListener('click', () => { currentImageIndex = scrollGallery(imageGallery, 'left', imageIndicator, currentImageIndex); });
+        if (scrollRightImages) scrollRightImages.addEventListener('click', () => { currentImageIndex = scrollGallery(imageGallery, 'right', imageIndicator, currentImageIndex); });
+        if (scrollLeftVideos) scrollLeftVideos.addEventListener('click', () => { currentVideoIndex = scrollGallery(videoGallery, 'left', videoIndicator, currentVideoIndex); });
+        if (scrollRightVideos) scrollRightVideos.addEventListener('click', () => { currentVideoIndex = scrollGallery(videoGallery, 'right', videoIndicator, currentVideoIndex); });
+        if (bookingClose) bookingClose.addEventListener('click', closeBookingModal);
+        if (bookingModal) bookingModal.addEventListener('click', (e) => { if (e.target === bookingModal) closeBookingModal(); });
+
+        document.addEventListener('keydown', (e) => {
+            if (mediaModal.classList.contains('active') && e.key === 'Escape') closeModal();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                loadImageGallery();
+                loadVideoGallery();
+            }, 100);
+        });
+        // =================================================================
+        // FIM: Conteúdo de app.js
+        // =================================================================
+    </script>
 </body>
 </html>
