@@ -2,36 +2,16 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const multer = require('multer');
-const { initializeApp, cert, getApp } = require('firebase-admin/app');
-const { getStorage } = require('firebase-admin/storage');
+
+// Importa a configuração centralizada do Firebase
+const { bucket, firebaseInitialized } = require('./config/firebase');
+const { getApp } = require('firebase-admin/app');
 
 const galleryRoutes = require('./routes/galleryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// --- Configuração do Firebase Admin SDK ---
-// Monta o objeto de credenciais a partir das variáveis de ambiente
-const serviceAccount = {
-  type: process.env.FIREBASE_TYPE,
-  project_id: process.env.FIREBASE_PROJECT_ID,
-  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-  private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  client_email: process.env.FIREBASE_CLIENT_EMAIL,
-  client_id: process.env.FIREBASE_CLIENT_ID,
-  auth_uri: process.env.FIREBASE_AUTH_URI,
-  token_uri: process.env.FIREBASE_TOKEN_URI,
-  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
-  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL
-};
-
-initializeApp({
-  credential: cert(serviceAccount),
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET
-});
-
-const bucket = getStorage().bucket();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Middleware
@@ -105,17 +85,22 @@ app.post('/api/appointments', upload.single('tattooImage'), async (req, res) => 
 
 // Health check com info do Firebase
 app.get('/api/health', (req, res) => {
-  try {
-    const firebaseApp = getApp(); // Pega a instância do app Firebase inicializado
+    let firebaseStatus = 'not_initialized';
+    if (firebaseInitialized) {
+        try {
+            getApp(); // Tenta pegar o app para confirmar
+            firebaseStatus = 'connected';
+        } catch (e) {
+            firebaseStatus = 'error_getting_app';
+        }
+    }
+
     res.status(200).json({
-      status: 'OK',
-      message: 'Jhow Tattoo Backend is running!',
-      firebase: firebaseApp.name ? 'connected' : 'error',
-      timestamp: new Date().toISOString()
+        status: 'OK',
+        message: 'Jhow Tattoo Backend is running!',
+        firebase: firebaseStatus,
+        timestamp: new Date().toISOString()
     });
-  } catch (error) {
-    res.status(500).json({ status: 'ERROR', message: 'Firebase not initialized', error: error.message });
-  }
 });
 
 // Mock data para desenvolvimento
