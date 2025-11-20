@@ -105,13 +105,11 @@ app.post('/api/appointments', upload.single('tattooImage'), async (req, res) => 
 
 // Health check com info do Firebase
 app.get('/api/health', (req, res) => {
-  const { firebaseInitialized } = require('./config/firebase');
-  
+  const rebaseAp
   res.status(200).json({ 
     status: 'OK', 
     message: 'Jhow Tattoo Backend is running!',
-    firebase: firebaseInitialized ? 'connected' : 'development_mode',
-    timestamp: new Date().toISOString()
+    firebase: firebaseApp.name ? 'connected' 
   });
 });
 

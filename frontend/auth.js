@@ -22,6 +22,7 @@ if (!window.APP_CONFIG || !window.APP_CONFIG.FIREBASE_CONFIG) {
 }
 
 const auth = firebase.auth();
+let currentUser = null; // Variável para manter o estado do usuário globalmente
 
 // DOM Elements
 const bookBtn = document.getElementById('bookBtn');
@@ -31,45 +32,49 @@ const bookingModal = document.getElementById('bookingModal');
 
 // Auth state observer
 auth.onAuthStateChanged((user) => {
-    if (user) {
-        // User is signed in
-        updateUIForUser(user);
-    } else {
-        // User is signed out
-        updateUIForGuest();
-    }
+    currentUser = user; // Atualiza o estado do usuário
+    updateUI(user);
 });
 
-// Update UI for logged in user
-function updateUIForUser(user) {
-    // Update button to show user info
-    bookBtn.innerHTML = `
-        <div class="user-info">
-            <img src="${user.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6bTAgMTdjLTIuNjcgMC04IDEuMzQtOCA0djJoMTZ2LTJjMC0yLjY2LTUuMzMtNC04LTR6Ii8+PC9zdmc+'}" 
-                 alt="Avatar" class="user-avatar">
-            <span class="user-name">${user.displayName || 'Usuário'}</span>
-        </div>
-        <button class="logout-btn" id="logoutBtn">Sair</button>
-    `;
-    
-    // Add logout functionality
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    
-    // Change book button behavior to open booking directly
-    bookBtn.onclick = () => openBookingModal();
+// Função única para atualizar a UI baseada no estado do usuário
+function updateUI(user) {
+    if (user) {
+        // Usuário logado
+        bookBtn.innerHTML = `
+            <div class="user-info">
+                <img src="${user.photoURL || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6bTAgMTdjLTIuNjcgMC04IDEuMzQtOCA0djJoMTZ2LTJjMC0yLjY2LTUuMzMtNC04LTR6Ii8+PC9zdmc+'}" 
+                     alt="Avatar" class="user-avatar">
+                <span class="user-name">${user.displayName || 'Usuário'}</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Sair</button>
+        `;
+    } else {
+        // Usuário deslogado
+        bookBtn.innerHTML = 'Agende sua Tattoo';
+    }
 }
 
-// Update UI for guest
-function updateUIForGuest() {
-    bookBtn.innerHTML = 'Agende sua Tattoo';
-    bookBtn.onclick = () => openAuthModal();
+// Manipulador de clique centralizado para o botão principal
+function handleBookBtnClick(event) {
+    // Usa 'closest' para detectar clique no botão de logout ou em seus filhos
+    if (event.target.closest('#logoutBtn')) {
+        handleLogout();
+        return; // Impede que outras ações de clique ocorram
+    }
+
+    // Se o usuário estiver logado, abre o modal de agendamento. Senão, o de autenticação.
+    if (currentUser) {
+        openBookingModal();
+    } else {
+        openAuthModal();
+    }
 }
 
 // Handle Google login
 function handleGoogleLogin() {
     // Verificar se o Firebase foi inicializado corretamente
     if (!firebase.apps.length) {
-        alert('Erro de configuração. Por favor, recarregue a página.');
+        alert('Erro de configuração do Firebase. Por favor, recarregue a página.');
         return;
     }
     
@@ -128,6 +133,10 @@ function closeAuthModal() {
 function openBookingModal() {
     bookingModal.classList.add('active');
     document.body.style.overflow = 'hidden';
+}
+
+if (bookBtn) {
+    bookBtn.addEventListener('click', handleBookBtnClick);
 }
 
 // Event listeners

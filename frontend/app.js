@@ -67,27 +67,6 @@ const BACKEND_URL = window.APP_CONFIG ? window.APP_CONFIG.BACKEND_URL : 'https:/
 let currentImageIndex = 0;
 let currentVideoIndex = 0;
 
-// Function to check if file exists with better error handling
-function checkFileExists(url) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-        // Add cache busting to avoid cached 404 responses
-        img.src = url + '?t=' + Date.now();
-    });
-}
-
-// Function to check if video exists
-function checkVideoExists(url) {
-    return new Promise((resolve) => {
-        const video = document.createElement('video');
-        video.onloadeddata = () => resolve(true);
-        video.onerror = () => resolve(false);
-        video.src = url + '?t=' + Date.now();
-    });
-}
-
 // Function to create placeholder for missing files
 function createPlaceholder(type, index) {
     const placeholder = document.createElement('div');
@@ -117,45 +96,34 @@ async function loadImageGallery() {
         galleryItem.setAttribute('data-index', i);
 
         try {
-            console.log(`Checking image: ${src}`);
-            const fileExists = await checkFileExists(src);
+            const img = new Image();
+            img.src = src;
+            img.alt = `Tattoo image ${i + 1}`;
+            img.loading = 'lazy';
             
-            if (fileExists) {
-                console.log(`Image exists, loading: ${src}`);
-                const img = new Image();
-                img.src = src;
-                img.alt = `Tattoo image ${i + 1}`;
-                img.loading = 'lazy';
-                
-                img.onload = () => {
-                    console.log(`Image loaded successfully: ${src}`);
-                    galleryItem.classList.add('loaded');
-                };
-                
-                img.onerror = () => {
-                    console.error(`Failed to load image: ${src}`);
-                    galleryItem.innerHTML = `
-                        <div class="placeholder-content">
-                            <div class="placeholder-icon">❌</div>
-                            <div class="placeholder-text">Erro ao carregar</div>
-                        </div>
-                    `;
-                    galleryItem.classList.add('error');
-                };
+            img.onload = () => {
+                console.log(`Image loaded successfully: ${src}`);
+                galleryItem.classList.add('loaded');
+            };
+            
+            img.onerror = () => {
+                console.error(`Failed to load image: ${src}`);
+                galleryItem.innerHTML = `
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">❌</div>
+                        <div class="placeholder-text">Erro ao carregar</div>
+                    </div>
+                `;
+                galleryItem.classList.add('error');
+            };
 
-                galleryItem.appendChild(img);
-                galleryItem.addEventListener('click', () => openMediaModal('image', src, i));
-            } else {
-                console.warn(`Image not found: ${src}`);
-                galleryItem.appendChild(createPlaceholder('image', i));
-                galleryItem.classList.add('not-found');
-            }
+            galleryItem.appendChild(img);
+            galleryItem.addEventListener('click', () => openMediaModal('image', src, i));
         } catch (error) {
             console.error(`Error loading image ${src}:`, error);
             galleryItem.appendChild(createPlaceholder('image', i));
             galleryItem.classList.add('error');
         }
-
         return galleryItem;
     });
 
@@ -189,9 +157,7 @@ async function loadVideoGallery() {
         galleryItem.setAttribute('data-index', i);
 
         try {
-            console.log(`Checking video: ${src}`);
-            
-            // For videos, we'll create them and let the browser handle loading
+            // Para vídeos, vamos criá-los e deixar o navegador lidar com o carregamento
             const video = document.createElement('video');
             video.src = src;
             video.alt = `Tattoo video ${i + 1}`;
@@ -203,10 +169,7 @@ async function loadVideoGallery() {
 
             video.onloadeddata = () => {
                 console.log(`Video loaded successfully: ${src}`);
-                galleryItem.classList.add('loaded');
-                
-                // Create thumbnail from video
-                video.currentTime = 1; // Get frame at 1 second
+                galleryItem.classList.add('loaded');                
             };
             
             video.onerror = () => {
@@ -219,20 +182,6 @@ async function loadVideoGallery() {
                 `;
                 galleryItem.classList.add('error');
             };
-
-            // Try to create a thumbnail
-            video.addEventListener('loadeddata', function() {
-                try {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    // You could use this canvas as thumbnail if needed
-                } catch (e) {
-                    console.log('Could not create video thumbnail:', e);
-                }
-            });
 
             galleryItem.appendChild(video);
             galleryItem.appendChild(playIcon);
@@ -447,24 +396,33 @@ if (bookingForm) {
                 body: formData
             });
             
+            const data = await response.json();
+
             if (response.ok) {
                 // Show success message
+                bookingSuccess.textContent = data.message || 'Sucesso! Redirecionando para o WhatsApp...';
                 bookingForm.style.display = 'none';
                 bookingSuccess.style.display = 'block';
                 
+                // Abre a URL do WhatsApp em uma nova aba
+                if (data.whatsappUrl) {
+                    window.open(data.whatsappUrl, '_blank');
+                }
+
                 // Reset form
                 bookingForm.reset();
                 fileName.textContent = 'Nenhum arquivo selecionado';
                 
-                // Close modal after 3 seconds
+                // Fecha o modal e reseta a UI após um tempo
                 setTimeout(() => {
                     closeBookingModal();
                     bookingForm.style.display = 'block';
                     bookingSuccess.style.display = 'none';
-                }, 3000);
+                    // Reseta o texto padrão da mensagem de sucesso
+                    bookingSuccess.textContent = 'Agendamento enviado com sucesso! Entraremos em contato em breve.';
+                }, 4000); // Aumentado para 4 segundos para dar tempo de ler a mensagem
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Erro ao enviar agendamento');
+                throw new Error(data.error || 'Erro ao enviar agendamento');
             }
         } catch (error) {
             console.error('Error submitting booking:', error);
